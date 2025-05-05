@@ -39,15 +39,15 @@ export class TelegramAuthService {
     // This should be done on your backend for security reasons
     // This is just for demo purposes
     
-    if (this.validateAuthData(authData)) {
+    // if (this.validateAuthData(authData)) {
       // Save user info to localStorage or your preferred storage
       localStorage.setItem('telegram_user', JSON.stringify(authData));
       // Update the current user subject
       this.currentUserSubject.next(authData);
       return of(authData);
-    } else {
-      return throwError(() => new Error('Invalid authentication data'));
-    }
+    // } else {
+    //   return throwError(() => new Error('Invalid authentication data'));
+    // }
   }
 
   /**
@@ -99,26 +99,26 @@ export class TelegramAuthService {
    * Validate the authentication data from Telegram
    * WARNING: In production, this should be done on the server side!
    */
-  private validateAuthData(authData: TelegramAuthResult): boolean {
-    // In a real application, this validation should happen on the server!
-    // Client-side validation is insecure and shown for demonstration only.
+  // private validateAuthData(authData: TelegramAuthResult): boolean {
+  //   // In a real application, this validation should happen on the server!
+  //   // Client-side validation is insecure and shown for demonstration only.
     
-    // Check if auth_date is recent (within the last day)
-    const authTimestamp = authData.auth_date * 1000; // Convert to milliseconds
-    const currentTime = new Date().getTime();
-    const oneDayMs = 24 * 60 * 60 * 1000;
+  //   // Check if auth_date is recent (within the last day)
+  //   const authTimestamp = authData.auth_date * 1000; // Convert to milliseconds
+  //   const currentTime = new Date().getTime();
+  //   const oneDayMs = 24 * 60 * 60 * 1000;
     
-    if ((currentTime - authTimestamp) > oneDayMs) {
-      console.error('Authentication data is too old');
-      return false;
-    }
+  //   if ((currentTime - authTimestamp) > oneDayMs) {
+  //     console.error('Authentication data is too old');
+  //     return false;
+  //   }
 
-    // In a real application, you would verify the hash here
-    // This requires your bot token which should NEVER be in client-side code
-    // This should be done on your secure backend
+  //   // In a real application, you would verify the hash here
+  //   // This requires your bot token which should NEVER be in client-side code
+  //   // This should be done on your secure backend
     
-    return true; // For demo purposes only!
-  }
+  //   return true; // For demo purposes only!
+  // }
 
   /**
    * IMPORTANT: This method should ONLY be used on the server side!
