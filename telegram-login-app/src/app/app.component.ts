@@ -25,7 +25,7 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Subscribe to auth state changes
     this.authSubscription = this.authService.currentUser$.subscribe(user => {
-      console.log('App component received auth update:', user);
+      console.log('Auth state updated:', user);
       this.userData = user;
     });
   }

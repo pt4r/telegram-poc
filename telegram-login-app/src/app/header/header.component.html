@@ -5,13 +5,6 @@
     </div>
     
     <div class="auth-section">
-      <!-- Show login button if user is not authenticated -->
-      <div *ngIf="!userData" class="login-button">
-        <app-telegram-login 
-          (callback)="onTelegramAuth($event)">
-        </app-telegram-login>
-      </div>
-
       <!-- Show user info and logout button if authenticated -->
       <div *ngIf="userData" class="user-profile">
         <div class="user-info">

@@ -19,29 +19,19 @@ export interface TelegramAuthResult {
   providedIn: 'root'
 })
 export class TelegramAuthService {
-  private botToken =  '8016901412:AAEEBRu9zuw-QG6h0lF83xTDBAg14nUlUHQ'; // Replace with your bot token - keep this secure on server side!
+  private botToken =  ''; // Replace with your bot token - keep this secure on server side!
   
   // Add a BehaviorSubject to track authentication state
   private currentUserSubject = new BehaviorSubject<TelegramAuthResult | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(private http: HttpClient) { 
-    console.log('TelegramAuthService initializing...');
     // Initialize the user from localStorage when service starts
     const userData = this.getAuthUser();
-    console.log('Initial user data from storage:', userData);
     this.currentUserSubject.next(userData);
   }
 
-  /**
-   * Process authentication data received from Telegram
-   */
   processAuth(authData: TelegramAuthResult): Observable<TelegramAuthResult> {
-    console.log('Processing authentication data:', authData);
-    // In a real application, NEVER verify on client side
-    // This should be done on your backend for security reasons
-    // This is just for demo purposes
-    
     // Save user info to localStorage
     localStorage.setItem('telegram_user', JSON.stringify(authData));
     console.log('User data saved to localStorage');
@@ -54,9 +44,6 @@ export class TelegramAuthService {
     );
   }
 
-  /**
-   * Check if user is authenticated
-   */
   isAuthenticated(): boolean {
     const userData = localStorage.getItem('telegram_user');
     if (!userData) {
@@ -81,9 +68,6 @@ export class TelegramAuthService {
     }
   }
 
-  /**
-   * Get the authenticated user data
-   */
   getAuthUser(): TelegramAuthResult | null {
     if (!this.isAuthenticated()) {
       console.log('User is not authenticated or session expired');
@@ -106,30 +90,10 @@ export class TelegramAuthService {
     }
   }
 
-  /**
-   * Log out the current user
-   */
   logout(): void {
     console.log('Logging out user');
     localStorage.removeItem('telegram_user');
     // Update the current user subject
     this.currentUserSubject.next(null);
-  }
-
-  /**
-   * IMPORTANT: This method should ONLY be used on the server side!
-   * It's shown here for educational purposes only.
-   */
-  private checkSignature(authData: TelegramAuthResult, botToken: string): boolean {
-    const dataCheckString = Object.keys(authData)
-      .filter(key => key !== 'hash')
-      .sort()
-      .map(key => `${key}=${authData[key as keyof TelegramAuthResult]}`)
-      .join('\n');
-
-    const secretKey = CryptoJS.SHA256(botToken);
-    const hash = CryptoJS.HmacSHA256(dataCheckString, secretKey).toString(CryptoJS.enc.Hex);
-    
-    return hash === authData.hash;
   }
 }

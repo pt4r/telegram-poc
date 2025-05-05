@@ -90,7 +90,6 @@ export class TelegramLoginComponent implements AfterViewInit {
   }
 
   private initTelegramWidget(): void {
-    // Check if Telegram is available
     if (!window.Telegram) {
       console.error('Telegram widget is not available');
       return;
@@ -101,9 +100,10 @@ export class TelegramLoginComponent implements AfterViewInit {
     existingElements.forEach(el => el.remove());
 
     // Create a container element for the Telegram widget if it doesn't exist
-    if (!this.widgetContainer) {
+    if (!this.widgetContainer) {// Create a unique ID for the container
+      const containerId = 'telegram-login-container-' + Math.floor(Math.random() * 1000);
       this.widgetContainer = document.createElement('div');
-      this.widgetContainer.id = 'telegram-login-container';
+      this.widgetContainer.id = containerId;
       // Append the container to the component instead of body
       this.el.nativeElement.appendChild(this.widgetContainer);
     } else {
@@ -135,8 +135,6 @@ export class TelegramLoginComponent implements AfterViewInit {
       
       // Append the login script to the container
       this.widgetContainer.appendChild(loginScript);
-      
-      console.log('Telegram login button added to DOM');
     } catch (error) {
       console.error('Error initializing Telegram widget:', error);
     }
