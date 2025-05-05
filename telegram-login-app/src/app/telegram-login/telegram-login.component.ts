@@ -54,6 +54,7 @@ export class TelegramLoginComponent implements AfterViewInit {
     if (userData) {
       setTimeout(() => this.checkAuthStatus(), 0);
     }
+    this.loadTelegramScript();
   }
 
   checkAuthStatus(): void {
@@ -72,11 +73,6 @@ export class TelegramLoginComponent implements AfterViewInit {
         console.error('Error parsing user data', e);
       }
     }
-  }
-
-  startTelegramLogin(): void {
-    // Load the Telegram script once the button is clicked
-    setTimeout(() => this.loadTelegramScript(), 0);
   }
 
   private loadTelegramScript(): void {
