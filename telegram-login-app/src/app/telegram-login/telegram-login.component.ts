@@ -99,10 +99,19 @@ export class TelegramLoginComponent implements AfterViewInit {
       return;
     }
 
+    // Clean up any previous widget instances
+    const existingElements = document.querySelectorAll('iframe[src*="telegram.org/auth"]');
+    existingElements.forEach(el => el.remove());
+
+    // Create a container element for the Telegram widget
+    const container = document.createElement('div');
+    container.id = 'telegram-login-container';
+    document.body.appendChild(container);
+
     // Create the Telegram Login widget
-    // @ts-ignore - Telegram widget is loaded from external script
     window.TelegramLoginWidget = {
       dataOnauth: (user: TelegramAuthResult) => {
+        console.log('Telegram widget auth callback triggered with user data:', user);
         this.onTelegramAuth(user);
       },
     };
@@ -117,7 +126,10 @@ export class TelegramLoginComponent implements AfterViewInit {
         radius: this.cornerRadius,
         onAuth: (user: any) => {
           // Ensure this runs inside Angular zone to trigger change detection
-          this.zone.run(() => window.TelegramLoginWidget.dataOnauth(user));
+          this.zone.run(() => {
+            console.log('onAuth callback from Telegram received:', user);
+            window.TelegramLoginWidget.dataOnauth(user);
+          });
         },
         usePic: this.usePic,
       });

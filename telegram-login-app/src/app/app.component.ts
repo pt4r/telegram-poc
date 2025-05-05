@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { TelegramLoginComponent } from './telegram-login/telegram-login.component';
 import { TelegramAuthService, TelegramAuthResult } from './services/telegram-auth.service';
 import { CommonModule } from '@angular/common';
 import { HeaderComponent } from './header/header.component';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -12,21 +13,36 @@ import { HeaderComponent } from './header/header.component';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent {
+export class AppComponent implements OnInit, OnDestroy {
   title = 'telegram-login-app';
   userData: TelegramAuthResult | null = null;
+  private authSubscription: Subscription | undefined;
   
   constructor(private authService: TelegramAuthService) {
-    // Check if we already have a logged-in user
-    this.userData = this.authService.getAuthUser();
+    // Initial check is now handled in ngOnInit
+  }
+  
+  ngOnInit(): void {
+    // Subscribe to auth state changes
+    this.authSubscription = this.authService.currentUser$.subscribe(user => {
+      console.log('App component received auth update:', user);
+      this.userData = user;
+    });
+  }
+
+  ngOnDestroy(): void {
+    // Clean up subscription
+    if (this.authSubscription) {
+      this.authSubscription.unsubscribe();
+    }
   }
   
   onTelegramAuth(user: TelegramAuthResult): void {
-    console.log('User info:', user);
+    console.log('User info received in app component:', user);
     this.authService.processAuth(user).subscribe({
       next: (authData) => {
-        console.log('Authentication successful', authData);
-        this.userData = authData;
+        console.log('Authentication processed successfully', authData);
+        // No need to set this.userData here as it will update via subscription
       },
       error: (error) => {
         console.error('Authentication failed', error);
@@ -36,6 +52,6 @@ export class AppComponent {
   
   logout(): void {
     this.authService.logout();
-    this.userData = null;
+    // No need to set this.userData = null here as it will update via subscription
   }
 }

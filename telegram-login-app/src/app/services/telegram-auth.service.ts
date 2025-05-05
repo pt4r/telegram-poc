@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of, throwError, BehaviorSubject } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, map, tap } from 'rxjs/operators';
 import * as CryptoJS from 'crypto-js';
 
 // Define interface for telegram auth result
@@ -26,8 +26,10 @@ export class TelegramAuthService {
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(private http: HttpClient) { 
+    console.log('TelegramAuthService initializing...');
     // Initialize the user from localStorage when service starts
     const userData = this.getAuthUser();
+    console.log('Initial user data from storage:', userData);
     this.currentUserSubject.next(userData);
   }
 
@@ -35,19 +37,21 @@ export class TelegramAuthService {
    * Process authentication data received from Telegram
    */
   processAuth(authData: TelegramAuthResult): Observable<TelegramAuthResult> {
+    console.log('Processing authentication data:', authData);
     // In a real application, NEVER verify on client side
     // This should be done on your backend for security reasons
     // This is just for demo purposes
     
-    // if (this.validateAuthData(authData)) {
-      // Save user info to localStorage or your preferred storage
-      localStorage.setItem('telegram_user', JSON.stringify(authData));
-      // Update the current user subject
-      this.currentUserSubject.next(authData);
-      return of(authData);
-    // } else {
-    //   return throwError(() => new Error('Invalid authentication data'));
-    // }
+    // Save user info to localStorage
+    localStorage.setItem('telegram_user', JSON.stringify(authData));
+    console.log('User data saved to localStorage');
+    
+    // Update the current user subject
+    this.currentUserSubject.next(authData);
+    
+    return of(authData).pipe(
+      tap(data => console.log('Auth data processed and returned:', data))
+    );
   }
 
   /**
@@ -55,7 +59,10 @@ export class TelegramAuthService {
    */
   isAuthenticated(): boolean {
     const userData = localStorage.getItem('telegram_user');
-    if (!userData) return false;
+    if (!userData) {
+      console.log('No user data in localStorage');
+      return false;
+    }
     
     try {
       const user = JSON.parse(userData) as TelegramAuthResult;
@@ -64,8 +71,12 @@ export class TelegramAuthService {
       const currentTime = new Date().getTime();
       const oneDayMs = 24 * 60 * 60 * 1000;
       
-      return (currentTime - authTimestamp) < oneDayMs;
+      const isStillValid = (currentTime - authTimestamp) < oneDayMs;
+      console.log('Auth validity check:', isStillValid ? 'valid' : 'expired');
+      
+      return isStillValid;
     } catch (e) {
+      console.error('Error parsing user data from localStorage', e);
       return false;
     }
   }
@@ -74,14 +85,23 @@ export class TelegramAuthService {
    * Get the authenticated user data
    */
   getAuthUser(): TelegramAuthResult | null {
-    if (!this.isAuthenticated()) return null;
+    if (!this.isAuthenticated()) {
+      console.log('User is not authenticated or session expired');
+      return null;
+    }
     
     const userData = localStorage.getItem('telegram_user');
-    if (!userData) return null;
+    if (!userData) {
+      console.log('No user data found in localStorage');
+      return null;
+    }
     
     try {
-      return JSON.parse(userData) as TelegramAuthResult;
+      const user = JSON.parse(userData) as TelegramAuthResult;
+      console.log('Retrieved user data from localStorage:', user);
+      return user;
     } catch (e) {
+      console.error('Error parsing user data from localStorage', e);
       return null;
     }
   }
@@ -90,35 +110,11 @@ export class TelegramAuthService {
    * Log out the current user
    */
   logout(): void {
+    console.log('Logging out user');
     localStorage.removeItem('telegram_user');
     // Update the current user subject
     this.currentUserSubject.next(null);
   }
-
-  /**
-   * Validate the authentication data from Telegram
-   * WARNING: In production, this should be done on the server side!
-   */
-  // private validateAuthData(authData: TelegramAuthResult): boolean {
-  //   // In a real application, this validation should happen on the server!
-  //   // Client-side validation is insecure and shown for demonstration only.
-    
-  //   // Check if auth_date is recent (within the last day)
-  //   const authTimestamp = authData.auth_date * 1000; // Convert to milliseconds
-  //   const currentTime = new Date().getTime();
-  //   const oneDayMs = 24 * 60 * 60 * 1000;
-    
-  //   if ((currentTime - authTimestamp) > oneDayMs) {
-  //     console.error('Authentication data is too old');
-  //     return false;
-  //   }
-
-  //   // In a real application, you would verify the hash here
-  //   // This requires your bot token which should NEVER be in client-side code
-  //   // This should be done on your secure backend
-    
-  //   return true; // For demo purposes only!
-  // }
 
   /**
    * IMPORTANT: This method should ONLY be used on the server side!
