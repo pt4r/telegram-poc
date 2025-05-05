@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of, throwError } from 'rxjs';
+import { Observable, of, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import * as CryptoJS from 'crypto-js';
 
@@ -20,8 +20,16 @@ export interface TelegramAuthResult {
 })
 export class TelegramAuthService {
   private botToken =  '8016901412:AAEEBRu9zuw-QG6h0lF83xTDBAg14nUlUHQ'; // Replace with your bot token - keep this secure on server side!
+  
+  // Add a BehaviorSubject to track authentication state
+  private currentUserSubject = new BehaviorSubject<TelegramAuthResult | null>(null);
+  public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) { 
+    // Initialize the user from localStorage when service starts
+    const userData = this.getAuthUser();
+    this.currentUserSubject.next(userData);
+  }
 
   /**
    * Process authentication data received from Telegram
@@ -34,6 +42,8 @@ export class TelegramAuthService {
     if (this.validateAuthData(authData)) {
       // Save user info to localStorage or your preferred storage
       localStorage.setItem('telegram_user', JSON.stringify(authData));
+      // Update the current user subject
+      this.currentUserSubject.next(authData);
       return of(authData);
     } else {
       return throwError(() => new Error('Invalid authentication data'));
@@ -81,6 +91,8 @@ export class TelegramAuthService {
    */
   logout(): void {
     localStorage.removeItem('telegram_user');
+    // Update the current user subject
+    this.currentUserSubject.next(null);
   }
 
   /**

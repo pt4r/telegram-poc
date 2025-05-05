@@ -32,7 +32,7 @@ export class TelegramLoginComponent implements AfterViewInit {
   @Output() callback = new EventEmitter<TelegramAuthResult>();
   @Input() buttonSize: 'large' | 'medium' | 'small' = 'large';
 
-  showWidget: boolean = true;
+  userData: TelegramAuthResult | null = null;
   private botId: number = 8016901412;
   private botName: string = 'betsson_test_bot';
   private cornerRadius: number = 20;
@@ -71,15 +71,6 @@ export class TelegramLoginComponent implements AfterViewInit {
       return;
     }
 
-    // Create a unique ID for the container
-    const containerId = 'telegram-login-' + Math.floor(Math.random() * 1000);
-
-    // Set the ID to the element
-    const container = this.el.nativeElement.querySelector(
-      '#telegram-login-container'
-    );
-    container.id = containerId;
-
     // Create the Telegram Login widget
     // @ts-ignore - Telegram widget is loaded from external script
     window.TelegramLoginWidget = {
@@ -94,7 +85,6 @@ export class TelegramLoginComponent implements AfterViewInit {
         bot_id: this.botId,
         bot_name: this.botName,
         request_access: this.requestAccess ? 'write' : false,
-        element: document.getElementById(containerId),
         button_size: this.buttonSize,
         radius: this.cornerRadius,
         onAuth: (user: any) => window.TelegramLoginWidget.dataOnauth(user),
@@ -107,7 +97,7 @@ export class TelegramLoginComponent implements AfterViewInit {
 
   onTelegramAuth(user: TelegramAuthResult): void {
     console.log('Telegram authentication successful:', user);
-    this.showWidget = false;
+    this.userData = user; // Store the user data
     this.callback.emit(user);
   }
 }
