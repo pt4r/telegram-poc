@@ -1,0 +1,11 @@
+<div id="telegram-login-container" *ngIf="!showWidget"></div>
+<button 
+  *ngIf="showWidget" 
+  class="telegram-login-button" 
+  (click)="startTelegramLogin()">
+  <img src="https://telegram.org/img/t_logo.png" alt="Telegram Logo">
+  Log in with Telegram
+</button>
+<div class="telegram-user-info" *ngIf="false">
+  <!-- This section will be displayed when user info is available -->
+</div>

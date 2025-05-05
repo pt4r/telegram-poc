@@ -1,0 +1,25 @@
+<header class="header">
+  <div class="header-container">
+    <div class="logo">
+      <h1>Telegram Auth Demo</h1>
+    </div>
+    
+    <div class="auth-section">
+      <!-- Show login button if user is not authenticated -->
+      <div *ngIf="!userData" class="login-button">
+        <app-telegram-login 
+          (callback)="onTelegramAuth($event)">
+        </app-telegram-login>
+      </div>
+
+      <!-- Show user info and logout button if authenticated -->
+      <div *ngIf="userData" class="user-profile">
+        <div class="user-info">
+          <img *ngIf="userData.photo_url" [src]="userData.photo_url" alt="Profile photo" class="profile-photo">
+          <span class="user-name">{{ userData.first_name }} {{ userData.last_name || '' }}</span>
+        </div>
+        <button class="logout-button" (click)="logout()">Logout</button>
+      </div>
+    </div>
+  </div>
+</header>

@@ -1,0 +1,36 @@
+<app-header></app-header>
+
+<div class="main-content">
+  <div class="container">  
+    <div *ngIf="!userData" class="login-container">
+      <h2>Welcome to Telegram Authentication Demo</h2>
+      <p>This demo shows how to integrate the Telegram Login Widget with an Angular application.</p>
+      <p>You can login with your Telegram account using the button below:</p>
+      
+      <app-telegram-login 
+        (callback)="onTelegramAuth($event)">
+      </app-telegram-login>
+    </div>
+
+    <div *ngIf="userData" class="user-info-container">
+      <h2>Welcome, {{userData.first_name}}!</h2>
+      
+      <div class="user-details">
+        <div *ngIf="userData.photo_url" class="user-photo">
+          <img [src]="userData.photo_url" alt="Profile Photo">
+        </div>
+        
+        <div class="user-data">
+          <p><strong>User ID:</strong> {{userData.id}}</p>
+          <p><strong>Name:</strong> {{userData.first_name}} {{userData.last_name || ''}}</p>
+          <p *ngIf="userData.username"><strong>Username:</strong> {{'@' + userData.username}}</p>
+          <p><strong>Auth Date:</strong> {{userData.auth_date * 1000 | date:'medium'}}</p>
+        </div>
+      </div>
+      
+      <button class="logout-btn" (click)="logout()">Logout</button>
+    </div>
+
+    <router-outlet></router-outlet>
+  </div>
+</div>

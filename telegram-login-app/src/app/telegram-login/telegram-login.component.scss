@@ -1,0 +1,39 @@
+.telegram-login-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #54A9EB;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background-color: #4095d6;
+  }
+  
+  &:active {
+    background-color: #367fb5;
+  }
+  
+  img {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+  }
+}
+
+#telegram-login-container {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.telegram-user-info {
+  margin-top: 20px;
+}
