@@ -19,7 +19,6 @@ export class AppComponent implements OnInit, OnDestroy {
   private authSubscription: Subscription | undefined;
   
   constructor(private authService: TelegramAuthService) {
-    // Initial check is now handled in ngOnInit
   }
   
   ngOnInit(): void {
@@ -31,18 +30,15 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Clean up subscription
     if (this.authSubscription) {
       this.authSubscription.unsubscribe();
     }
   }
   
   onTelegramAuth(user: TelegramAuthResult): void {
-    console.log('User info received in app component:', user);
     this.authService.processAuth(user).subscribe({
       next: (authData) => {
         console.log('Authentication processed successfully', authData);
-        // No need to set this.userData here as it will update via subscription
       },
       error: (error) => {
         console.error('Authentication failed', error);
@@ -52,6 +48,5 @@ export class AppComponent implements OnInit, OnDestroy {
   
   logout(): void {
     this.authService.logout();
-    // No need to set this.userData = null here as it will update via subscription
   }
 }
