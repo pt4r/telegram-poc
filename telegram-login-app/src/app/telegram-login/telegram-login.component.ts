@@ -5,6 +5,8 @@ import {
   Input,
   Output,
   EventEmitter,
+  NgZone,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TelegramAuthResult } from '../services/telegram-auth.service';
@@ -39,10 +41,36 @@ export class TelegramLoginComponent implements AfterViewInit {
   private requestAccess: 'write' | false = false;
   private usePic: boolean = true;
 
-  constructor(private el: ElementRef) {}
+  constructor(
+    private el: ElementRef,
+    private zone: NgZone,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngAfterViewInit(): void {
-    // No longer auto-loading the script on component initialization
+    // Check if we need to reload the widget after login
+    const userData = localStorage.getItem('telegram_user');
+    if (userData) {
+      setTimeout(() => this.checkAuthStatus(), 0);
+    }
+  }
+
+  checkAuthStatus(): void {
+    // Check if there's user data in localStorage and emit it
+    const userData = localStorage.getItem('telegram_user');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        this.userData = user;
+        // Force re-rendering
+        this.zone.run(() => {
+          this.callback.emit(user);
+          this.cdr.detectChanges();
+        });
+      } catch (e) {
+        console.error('Error parsing user data', e);
+      }
+    }
   }
 
   startTelegramLogin(): void {
@@ -87,7 +115,10 @@ export class TelegramLoginComponent implements AfterViewInit {
         request_access: this.requestAccess ? 'write' : false,
         button_size: this.buttonSize,
         radius: this.cornerRadius,
-        onAuth: (user: any) => window.TelegramLoginWidget.dataOnauth(user),
+        onAuth: (user: any) => {
+          // Ensure this runs inside Angular zone to trigger change detection
+          this.zone.run(() => window.TelegramLoginWidget.dataOnauth(user));
+        },
         usePic: this.usePic,
       });
     } catch (error) {
@@ -98,6 +129,11 @@ export class TelegramLoginComponent implements AfterViewInit {
   onTelegramAuth(user: TelegramAuthResult): void {
     console.log('Telegram authentication successful:', user);
     this.userData = user; // Store the user data
-    this.callback.emit(user);
+    
+    // Use NgZone to ensure Angular knows about this update
+    this.zone.run(() => {
+      this.callback.emit(user);
+      this.cdr.detectChanges();
+    });
   }
 }
