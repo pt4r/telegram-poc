@@ -19,7 +19,7 @@ declare global {
         auth: (options: any) => void;
       };
     };
-    TelegramLoginWidget?: any;
+    onTelegramAuth?: (user: TelegramAuthResult) => void;
   }
 }
 
@@ -40,6 +40,7 @@ export class TelegramLoginComponent implements AfterViewInit {
   private cornerRadius: number = 20;
   private requestAccess: 'write' | false = false;
   private usePic: boolean = true;
+  private widgetContainer: HTMLElement | null = null;
 
   constructor(
     private el: ElementRef,
@@ -103,36 +104,43 @@ export class TelegramLoginComponent implements AfterViewInit {
     const existingElements = document.querySelectorAll('iframe[src*="telegram.org/auth"]');
     existingElements.forEach(el => el.remove());
 
-    // Create a container element for the Telegram widget
-    const container = document.createElement('div');
-    container.id = 'telegram-login-container';
-    document.body.appendChild(container);
+    // Create a container element for the Telegram widget if it doesn't exist
+    if (!this.widgetContainer) {
+      this.widgetContainer = document.createElement('div');
+      this.widgetContainer.id = 'telegram-login-container';
+      // Append the container to the component instead of body
+      this.el.nativeElement.appendChild(this.widgetContainer);
+    } else {
+      // Clear the container
+      this.widgetContainer.innerHTML = '';
+    }
 
-    // Create the Telegram Login widget
-    window.TelegramLoginWidget = {
-      dataOnauth: (user: TelegramAuthResult) => {
-        console.log('Telegram widget auth callback triggered with user data:', user);
+    // Set up the global callback that Telegram's widget will call
+    window.onTelegramAuth = (user: TelegramAuthResult) => {
+      console.log('Global onTelegramAuth called with user:', user);
+      this.zone.run(() => {
         this.onTelegramAuth(user);
-      },
+      });
     };
 
     try {
       console.log('Initializing Telegram widget with bot ID:', this.botName);
-      window.Telegram.Login.auth({
-        bot_id: this.botId,
-        bot_name: this.botName,
-        request_access: this.requestAccess ? 'write' : false,
-        button_size: this.buttonSize,
-        radius: this.cornerRadius,
-        onAuth: (user: any) => {
-          // Ensure this runs inside Angular zone to trigger change detection
-          this.zone.run(() => {
-            console.log('onAuth callback from Telegram received:', user);
-            window.TelegramLoginWidget.dataOnauth(user);
-          });
-        },
-        usePic: this.usePic,
-      });
+      
+      // Create a script element for the Telegram Login button
+      const loginScript = document.createElement('script');
+      loginScript.async = true;
+      loginScript.src = "https://telegram.org/js/telegram-widget.js";
+      loginScript.setAttribute('data-telegram-login', this.botName);
+      loginScript.setAttribute('data-size', this.buttonSize);
+      loginScript.setAttribute('data-radius', this.cornerRadius.toString());
+      loginScript.setAttribute('data-request-access', this.requestAccess ? 'write' : 'read');
+      loginScript.setAttribute('data-userpic', this.usePic.toString());
+      loginScript.setAttribute('data-onauth', 'onTelegramAuth(user)');
+      
+      // Append the login script to the container
+      this.widgetContainer.appendChild(loginScript);
+      
+      console.log('Telegram login button added to DOM');
     } catch (error) {
       console.error('Error initializing Telegram widget:', error);
     }
@@ -141,6 +149,9 @@ export class TelegramLoginComponent implements AfterViewInit {
   onTelegramAuth(user: TelegramAuthResult): void {
     console.log('Telegram authentication successful:', user);
     this.userData = user; // Store the user data
+    
+    // Store user data in local storage
+    localStorage.setItem('telegram_user', JSON.stringify(user));
     
     // Use NgZone to ensure Angular knows about this update
     this.zone.run(() => {
